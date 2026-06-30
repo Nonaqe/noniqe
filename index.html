@@ -629,8 +629,8 @@ body.theme-night .player{animation:playerPulse 2.6s ease-in-out infinite}
    src: путь к локальному mp3 или прямой URL.
    ============================================================ */
 const TRACKS = [
-  { title: "Bremenskiy Platina", artist: "kvartira134", src: "kvartira134-bremenskiy-platina.mp3", cover: "kvartira1.jpg", theme: "rain" },
   { title: "Nevesta", artist: "Glukoza", src: "glukoza_nevesta.mp3", cover: "glukoza.webp", theme: "night" },
+  { title: "Bremenskiy Platina", artist: "kvartira134", src: "kvartira134-bremenskiy-platina.mp3", cover: "kvartira1.jpg", theme: "rain" },
 ];
 
 const audio = new Audio();
@@ -759,15 +759,12 @@ load(0);
 /* autoplay: пробуем сразу; браузеры часто блокируют звук до жеста —
    тогда стартуем при первом клике/тапе/нажатии клавиши */
 play();
+const KICK_EVENTS = ["pointerdown","mousedown","touchstart","keydown","click","wheel","scroll"];
 function kickstart(){
   if(audio.paused) play();
-  window.removeEventListener("pointerdown",kickstart);
-  window.removeEventListener("keydown",kickstart);
-  window.removeEventListener("touchstart",kickstart);
+  KICK_EVENTS.forEach(ev=>window.removeEventListener(ev,kickstart));
 }
-window.addEventListener("pointerdown",kickstart);
-window.addEventListener("keydown",kickstart);
-window.addEventListener("touchstart",kickstart);
+KICK_EVENTS.forEach(ev=>window.addEventListener(ev,kickstart,{passive:true}));
 </script>
 </body>
 </html>
