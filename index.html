@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>// Nonaqe //</title>
-<link rel="icon" type="image/jpeg" href="photo.jpg">
-<link rel="apple-touch-icon" href="photo.jpg">
+<link rel="icon" type="image/jpeg" href="assets/img/photo.jpg">
+<link rel="apple-touch-icon" href="assets/img/photo.jpg">
 
 <!-- ========================================================= -->
 <!-- TODO: замени имя/ник, тэглайн, ссылки и аудиофайлы ниже    -->
@@ -58,7 +58,7 @@ body::before{
 /* ===== rain.gif background layer ===== */
 .rain-bg{
   position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:url("rain.gif") center center/cover no-repeat;
+  background:url("assets/img/rain.gif") center center/cover no-repeat;
   filter:brightness(.4) saturate(.65) contrast(1.05);
   opacity:1;transition:opacity 1.3s ease;
 }
@@ -73,7 +73,7 @@ body::before{
 /* ===== gorod.jpg night-city background layer ===== */
 .city-bg{
   position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:url("gorod.jpg") center center/cover no-repeat;
+  background:url("assets/img/gorod.jpg") center center/cover no-repeat;
   filter:brightness(.52) saturate(1.2) contrast(1.05);
   opacity:0;transition:opacity 1.3s ease;
 }
@@ -502,6 +502,19 @@ body.theme-night .player{animation:playerPulse 2.6s ease-in-out infinite}
   transition:transform .15s ease;
 }
 .vol::-webkit-slider-thumb:hover{transform:scale(1.18)}
+
+/* ===== visitors counter ===== */
+.visits{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  color:var(--muted);font-size:.72rem;letter-spacing:.16em;
+  font-variant-numeric:tabular-nums;
+  margin-top:-6px;
+}
+.visits-ico{
+  width:15px;height:15px;color:var(--purple-bright);
+  filter:drop-shadow(0 0 5px var(--glow-p));
+  transition:color 1.3s ease;
+}
 .vol::-moz-range-thumb{
   width:16px;height:16px;border:none;border-radius:50%;
   background:#fff;cursor:pointer;
@@ -526,7 +539,7 @@ body.theme-night .player{animation:playerPulse 2.6s ease-in-out infinite}
 <div class="city-bg" aria-hidden="true"></div>
 <div class="video-bg" aria-hidden="true">
   <video class="bgv" id="bgVideo" muted loop playsinline preload="auto">
-    <source src="video.mp4" type="video/mp4">
+    <source src="assets/video/video.mp4" type="video/mp4">
   </video>
 </div>
 <div class="bg-blobs" aria-hidden="true">
@@ -539,7 +552,7 @@ body.theme-night .player{animation:playerPulse 2.6s ease-in-out infinite}
   <!-- ============ HERO ============ -->
   <header class="hero">
     <!-- [TODO] фото: photo.jpg уже подключено -->
-    <img class="avatar" src="photo.jpg" alt="avatar">
+    <img class="avatar" src="assets/img/photo.jpg" alt="avatar">
     <span class="name-wrap">
       <h1 class="name" data-text="Nonaqe">Nonaqe</h1>
       <span class="glare" aria-hidden="true"></span>
@@ -621,6 +634,16 @@ body.theme-night .player{animation:playerPulse 2.6s ease-in-out infinite}
     </div>
   </section>
 
+  <!-- ============ VISITS ============ -->
+  <div class="visits" title="посетителей">
+    <svg class="visits-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+    <span id="visitCount">—</span>
+  </div>
+
 </main>
 
 <script>
@@ -629,8 +652,8 @@ body.theme-night .player{animation:playerPulse 2.6s ease-in-out infinite}
    src: путь к локальному mp3 или прямой URL.
    ============================================================ */
 const TRACKS = [
-  { title: "Nevesta", artist: "Glukoza", src: "glukoza_nevesta.mp3", cover: "glukoza.webp", theme: "night" },
-  { title: "Bremenskiy Platina", artist: "kvartira134", src: "kvartira134-bremenskiy-platina.mp3", cover: "kvartira1.jpg", theme: "rain" },
+  { title: "Nevesta", artist: "Glukoza", src: "assets/audio/glukoza_nevesta.mp3", cover: "assets/img/glukoza.webp", theme: "night" },
+  { title: "Bremenskiy Platina", artist: "kvartira134", src: "assets/audio/kvartira134-bremenskiy-platina.mp3", cover: "assets/img/kvartira1.jpg", theme: "rain" },
 ];
 
 const audio = new Audio();
@@ -765,6 +788,27 @@ function kickstart(){
   KICK_EVENTS.forEach(ev=>window.removeEventListener(ev,kickstart));
 }
 KICK_EVENTS.forEach(ev=>window.addEventListener(ev,kickstart,{passive:true}));
+
+/* ===== счётчик посетителей (бесплатный counter-API, без бэкенда) =====
+   уникальность по localStorage: refresh не накручивает */
+(function(){
+  const el = document.getElementById("visitCount");
+  if(!el) return;
+  const NS = "nonaqe-noniqe", KEY = "visits";
+  const base = "https://abacus.jasoncameron.dev";
+  const visited = localStorage.getItem("nq_visited");
+  // первый визит этого браузера → +1 (hit), иначе только читаем (get)
+  const url = visited ? `${base}/get/${NS}/${KEY}` : `${base}/hit/${NS}/${KEY}`;
+  fetch(url)
+    .then(r => r.json())
+    .then(d => {
+      if(d && typeof d.value === "number"){
+        el.textContent = d.value.toLocaleString("ru-RU");
+        if(!visited) localStorage.setItem("nq_visited","1");
+      } else { el.textContent = "—"; }
+    })
+    .catch(() => { el.textContent = "—"; });
+})();
 </script>
 </body>
 </html>
